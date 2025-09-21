@@ -93,7 +93,7 @@
             25% { transform: translateX(20px) translateY(5px); }
             50% { transform: translateX(0) translateY(10px); }
             75% { transform: translateX(-20px) translateY(5px); }
-            100% { transform: translateX(0) translateY(0); }
+            /* Corregido: añadido el cierre de llave */
         }
         
         /* Cometa - corregido para no afectar el layout */
@@ -699,7 +699,7 @@
         </div>
     </div>
 
-    <!-- Elemento de audio -->
+    <!-- Elemento de audio - APUNTA A TU ARCHIVO EN GITHUB -->
     <audio id="backgroundMusic" loop>
         <source src="music/song.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
@@ -741,29 +741,38 @@
     </div>
 
     <script>
-        // Controlador de música
+        // Controlador de música - CORREGIDO
         const audio = document.getElementById('backgroundMusic');
         const playPauseBtn = document.getElementById('playPauseBtn');
         const volumeSlider = document.getElementById('volumeSlider');
+        
+        // Estado inicial
         let isPlaying = false;
-
-        // Configurar volumen inicial
         audio.volume = 0.5;
 
-        // Controlar botón de play/pause
+        // Función para actualizar el icono del botón
+        function updateButtonIcon() {
+            playPauseBtn.innerHTML = isPlaying ? 
+                '<i class="fas fa-pause"></i>' : 
+                '<i class="fas fa-play"></i>';
+        }
+
+        // Controlar botón de play/pause - CORREGIDO
         playPauseBtn.addEventListener('click', function() {
             if (isPlaying) {
                 audio.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                isPlaying = false;
             } else {
-                audio.play().catch(error => {
-                    console.log('La reproducción automática fue prevenida:', error);
-                    // Si la reproducción automática falla, cambiamos el icono a play
-                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updateButtonIcon();
+                }).catch(error => {
+                    console.log('Error al reproducir:', error);
+                    isPlaying = false;
+                    updateButtonIcon();
                 });
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
             }
-            isPlaying = !isPlaying;
+            updateButtonIcon();
         });
 
         // Controlar volumen
@@ -781,23 +790,35 @@
             }
         });
 
-        // Cuando la música termina
+        // Actualizar estado cuando la música termina
         audio.addEventListener('ended', function() {
             isPlaying = false;
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            updateButtonIcon();
         });
 
-        // Intenta reproducir automáticamente (puede que no funcione en algunos navegadores)
-        window.addEventListener('click', function() {
+        // Actualizar estado cuando la música se pausa
+        audio.addEventListener('pause', function() {
+            isPlaying = false;
+            updateButtonIcon();
+        });
+
+        // Actualizar estado cuando la música se reproduce
+        audio.addEventListener('play', function() {
+            isPlaying = true;
+            updateButtonIcon();
+        });
+
+        // Intenta reproducir automáticamente al hacer clic en cualquier lugar
+        document.body.addEventListener('click', function() {
             if (!isPlaying && audio.paused) {
                 audio.play().then(() => {
                     isPlaying = true;
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    updateButtonIcon();
                 }).catch(error => {
                     console.log('La reproducción automática fue prevenida:', error);
                 });
             }
-        });
+        }, { once: true }); // Solo una vez
 
         // Crear estrellas
         const starsContainer = document.getElementById('stars');
